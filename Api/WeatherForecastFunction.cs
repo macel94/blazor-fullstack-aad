@@ -20,6 +20,20 @@ namespace ApiIsolated
         [Function("WeatherForecast")]
         public HttpResponseData Run([HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequestData req)
         {
+            var claimsPrincipal = req.ParseClaims();
+
+            if (claimsPrincipal == null || !claimsPrincipal.Identity.IsAuthenticated)
+            {
+                _logger.LogInformation("User is not authenticated");
+                return req.CreateResponse(HttpStatusCode.Unauthorized);
+            }
+
+            if (claimsPrincipal.Claims.FirstOrDefault(x => x.Value == "authenticated") == null)
+            {
+                _logger.LogInformation("User is not authorized");
+                return req.CreateResponse(HttpStatusCode.Forbidden);
+            }
+
             var randomNumber = new Random();
             var temp = 0;
 
